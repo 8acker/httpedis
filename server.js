@@ -19,12 +19,27 @@ app.get('/', (req, res) => {
 
 app.get('/:command/:key*', (req, res) => {
     const key = req.params.key + (req.params['0'] || '');
-    redis[req.params.command](key, function (err, result) {
-        res.status(200);
-        res.contentType(mime.lookup('json'));
-        res.end(JSON.stringify(JSON.parse(result), null, 2));
-    })
+    getCommandHandler(req.params.command)(key, res, req.params.command);
 });
+
+const getCommandHandler = (command) => commandHandler[command] || commandHandler._;
+
+const commandHandler = {
+    keys: (key, res) => {
+        redis.keys(key, (err, result) => {
+            res.status(200);
+            res.contentType(mime.lookup('json'));
+            res.end(JSON.stringify(result, null, 2));
+        })
+    },
+    _: (key, res, command) => {
+        redis[command](key, (err, result) => {
+            res.status(200);
+            res.contentType(mime.lookup('json'));
+            res.end(JSON.stringify(JSON.parse(result), null, 2));
+        })
+    }
+};
 
 const port = getEnv('HTTP_PORT', 7369);
 app.listen(port, function (err) {
