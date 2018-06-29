@@ -1,0 +1,24 @@
+{
+  "name": "httpedis",
+  "version": "1.0.0",
+  "description": "Http wrapper for ioredis",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/mocha/bin/mocha test/**/*.js --opts test/mocha.opts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tbouchnafa/httpedis.git"
+  },
+  "keywords": [
+    "Redis",
+    "Http",
+    "Rest"
+  ],
+  "author": "Thami Bouchnafa",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tbouchnafa/httpedis/issues"
+  },
+  "homepage": "https://github.com/tbouchnafa/httpedis#readme"
+}
