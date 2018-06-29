@@ -20,5 +20,11 @@
   "bugs": {
     "url": "https://github.com/tbouchnafa/httpedis/issues"
   },
-  "homepage": "https://github.com/tbouchnafa/httpedis#readme"
+  "homepage": "https://github.com/tbouchnafa/httpedis#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "ioredis": "^3.2.2",
+    "mime-types": "^2.1.18",
+    "nconf": "^0.10.0"
+  }
 }
