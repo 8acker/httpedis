@@ -27,5 +27,8 @@
     "ioredis": "^3.2.2",
     "mime-types": "^2.1.18",
     "nconf": "^0.10.0"
+  },
+  "config": {
+    "REDIS_DB": 1
   }
 }

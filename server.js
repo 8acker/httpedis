@@ -1,13 +1,17 @@
-const getEnv = require('./lib/getEnv');
+const pjson = require('./package');
 const Redis = require('ioredis');
 const mime = require('mime-types');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const env = require("nconf").defaults(pjson.config).argv().env();
+const getEnv = (variable, _default) => env.get(variable) || _default;
+
 const host = getEnv('REDIS_HOST', '127.0.0.1');
 const redisPort = getEnv('REDIS_PORT', 6379);
 const auth = getEnv('REDIS_AUTH', '');
 const db = getEnv('REDIS_DB', 0);
+
 const redis = new Redis(`redis://:${auth}@${host}:${redisPort}/${db}`);
 
 var app = express();
