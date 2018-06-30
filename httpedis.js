@@ -72,22 +72,24 @@ module.exports = (config) => {
                     res.status(500);
                     return res.end(err.message);
                 }
-                res.status(result && 200 || 404);
-                res.contentType(mime.lookup('json'));
-                res.end(result && parseJsonOrReturnBody(result) || notFoundBody(key));
+                const response = getResponse(key, result);
+                res.status(response.status);
+                res.contentType(mime.lookup(response.contentType));
+                res.end(response.body);
             })
         }
     };
 
-    const parseJsonOrReturnBody = (body) => {
+    const getResponse = (key, result) => {
+        if (!result) {
+            return {status: 404, body: JSON.stringify({status: "NOT_FOUNT", key: key}), contentType: "json"};
+        }
         try {
-            return JSON.stringify(JSON.parse(body), null, 2);
+            return {status: 200, body: JSON.stringify(JSON.parse(result), null, 2), contentType: "json"};
         } catch (e) {
-            return body;
+            return {status: 200, body: result, contentType: "text"};
         }
     };
-
-    const notFoundBody = (key) => JSON.stringify({status: "NOT_FOUNT", key: key}, null, 2);
 
     const updateCommandHandler = {
         set: (res, req) => {
@@ -101,9 +103,9 @@ module.exports = (config) => {
                     }
                     res.status(200);
                     res.contentType(mime.lookup('json'));
-                    res.end(JSON.stringify({key: key, value: body}, null, 2));
+                    res.end(JSON.stringify({key: key, value: req.body}, null, 2));
                 })
-            } catch (e) {
+            } catch (err) {
                 res.status(400);
                 res.end(err.message);
             }
@@ -132,7 +134,7 @@ module.exports = (config) => {
             })
         },
         stop: (cb) => self.server.close(function (err) {
-            console.log(err || `Stopping HTTPEDIS`);
+            console.log(err || `HTTPEDIS stopped`);
             return cb && cb();
         })
     }
