@@ -1,8 +1,9 @@
 {
   "name": "httpedis",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Http wrapper for ioredis",
   "main": "httpedis.js",
+  "readmeFilename": "README.md",
   "scripts": {
     "test": "node_modules/mocha/bin/mocha test/**/*.js --opts test/mocha.opts",
     "start": "node httpedis"

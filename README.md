@@ -2,6 +2,10 @@
 
 A HTTP wrapper for `ioredis`
 
+### Install 
+```jshelllanguage
+npm install httpedis
+```
 ### Usage 
 
 ```js
@@ -24,7 +28,6 @@ httpedis.start(optionalCallback);
 httpedis.reload({REDIS_DB: 1});
 
 // Stopping server 
-
 httpedis.stop(optionalCallback)
 ```
 # Enjoy
