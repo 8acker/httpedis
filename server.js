@@ -24,23 +24,28 @@ app.get('/', (req, res) => {
 
 app.use(bodyParser.json());
 
+const badRequest = (res, req) => {
+    res.status(400);
+    res.contentType(mime.lookup('json'));
+    res.end(JSON.stringify({params: req.params, query: req.query}, null, 2));
+};
+
 app.get('/:command/:key*', (req, res) => {
-    const key = `${req.params.key}${req.params['0']}`;
-    getFetchCommandHandler(req.params.command)(key, res, req.params.command);
+    const handler = fetchCommandsHandler[req.params.command];
+    if (!handler) return badRequest(res, req);
+    handler(res, req);
 });
 
 app.put('/:command/:key*', (req, res) => {
-    const key = `${req.params.key}${req.params['0']}`;
-    getUpdateCommandHandler(req.params.command)(key, res, req.params.command, req.body);
+    const handler = updateCommandHandler[req.params.command];
+    if (!handler) return badRequest(res, req);
+    handler(res, req);
 });
 
-const getFetchCommandHandler = (command) => fetchCommandsHandler[command] || fetchCommandsHandler._default;
-
-const getUpdateCommandHandler = (command) => updateCommandHandler[command] || updateCommandHandler._default;
-
 const fetchCommandsHandler = {
-    keys: (key, res) => {
-        redis.keys(key, (err, result) => {
+    keys: (res, req) => {
+        const pattern = `${req.params.key}${req.params['0']}`;
+        redis.keys(pattern, (err, result) => {
             if (err) {
                 res.status(500);
                 res.end(err.message);
@@ -51,11 +56,24 @@ const fetchCommandsHandler = {
             res.end(JSON.stringify(result, null, 2));
         })
     },
-    _default: (key, res, command) => {
-        redis[command](key, (err, result) => {
+    scan: (res, req) => {
+        const pattern = `${req.params.key}${req.params['0']}`;
+        redis.scan(req.query.cursor || 0, "MATCH", pattern, "COUNT", req.query.count || 100, (err, result) => {
             if (err) {
                 res.status(500);
-                res.end(err.message);
+                return res.end(err.message);
+            }
+            res.status(200);
+            res.contentType(mime.lookup('json'));
+            res.end(JSON.stringify(result && result.length > 1 && result[1], null, 2));
+        })
+    },
+    get: (res, req) => {
+        const key = `${req.params.key}${req.params['0']}`;
+        redis.get(key, (err, result) => {
+            if (err) {
+                res.status(500);
+                return res.end(err.message);
             }
             res.status(200);
             res.contentType(mime.lookup('json'));
@@ -65,23 +83,21 @@ const fetchCommandsHandler = {
 };
 
 const updateCommandHandler = {
-    _default: (key, res, command, body) => {
+    set: (res, req) => {
+        const key = `${req.params.key}${req.params['0']}`;
         try {
-            const value = JSON.stringify(body);
-            redis[command](key, value, function (err) {
+            const value = JSON.stringify(req.body);
+            redis.set(key, value, function (err) {
                 if (err) {
-                    console.error(err.message);
                     res.status(500);
-                    res.end(err.message);
-                    return;
+                    return res.end(err.message);
                 }
                 res.status(200);
                 res.contentType(mime.lookup('json'));
                 res.end(JSON.stringify({key: key, value: body}, null, 2));
             })
         } catch (e) {
-            console.error(e.message);
-            res.status(500);
+            res.status(400);
             res.end(err.message);
         }
     }
