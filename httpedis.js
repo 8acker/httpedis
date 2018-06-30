@@ -62,7 +62,7 @@ module.exports = (config) => {
                 }
                 res.status(200);
                 res.contentType(mime.lookup('json'));
-                res.end(JSON.stringify(result && result.length > 1 && result[1], null, 2));
+                res.end(JSON.stringify(result && result.length > 1 && result[1] || [], null, 2));
             })
         },
         get: (res, req) => {
@@ -72,12 +72,22 @@ module.exports = (config) => {
                     res.status(500);
                     return res.end(err.message);
                 }
-                res.status(200);
+                res.status(result && 200 || 404);
                 res.contentType(mime.lookup('json'));
-                res.end(result && JSON.stringify(JSON.parse(result), null, 2) || result);
+                res.end(result && parseJsonOrReturnBody(result) || notFoundBody(key));
             })
         }
     };
+
+    const parseJsonOrReturnBody = (body) => {
+        try {
+            return JSON.stringify(JSON.parse(body), null, 2);
+        } catch (e) {
+            return body;
+        }
+    };
+
+    const notFoundBody = (key) => JSON.stringify({status: "NOT_FOUNT", key: key}, null, 2);
 
     const updateCommandHandler = {
         set: (res, req) => {
