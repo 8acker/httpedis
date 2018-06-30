@@ -1,4 +1,4 @@
-## Htt[P|R]edis
+## ![HttPRedis](https://github.com/tbouchnafa/httpedis/blob/master/assets/httpedis-logo.png)
 
 A HTTP wrapper for `ioredis`
 
