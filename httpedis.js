@@ -5,19 +5,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 module.exports = (config) => {
-    const env = nconf.defaults(config).argv().env();
-    const getEnv = (variable, _default) => env.get(variable) || _default;
+    config = config || {};
+    const self = this;
+    self.app = express();
+    self.app.use(bodyParser.json());
 
-    const host = getEnv('REDIS_HOST', '127.0.0.1');
-    const redisPort = getEnv('REDIS_PORT', 6379);
-    const auth = getEnv('REDIS_AUTH', '');
-    const db = getEnv('REDIS_DB', 0);
-
-    const redis = new Redis(`redis://:${auth}@${host}:${redisPort}/${db}`);
-
-    var app = express();
-
-    app.get('/', (req, res) => {
+    self.app.get('/', (req, res) => {
         res.status(200);
         res.contentType(mime.lookup('json'));
         res.end(JSON.stringify({
@@ -27,7 +20,6 @@ module.exports = (config) => {
                                }, null, 2));
     });
 
-    app.use(bodyParser.json());
 
     const badRequest = (res, req) => {
         res.status(400);
@@ -35,13 +27,13 @@ module.exports = (config) => {
         res.end(JSON.stringify({params: req.params, query: req.query}, null, 2));
     };
 
-    app.get('/:command/:key*', (req, res) => {
+    self.app.get('/:command/:key*', (req, res) => {
         const handler = fetchCommandsHandler[req.params.command];
         if (!handler) return badRequest(res, req);
         handler(res, req);
     });
 
-    app.put('/:command/:key*', (req, res) => {
+    self.app.put('/:command/:key*', (req, res) => {
         const handler = updateCommandHandler[req.params.command];
         if (!handler) return badRequest(res, req);
         handler(res, req);
@@ -50,7 +42,7 @@ module.exports = (config) => {
     const fetchCommandsHandler = {
         keys: (res, req) => {
             const pattern = `${req.params.key}${req.params['0']}`;
-            redis.keys(pattern, (err, result) => {
+            self.redis.keys(pattern, (err, result) => {
                 if (err) {
                     res.status(500);
                     res.end(err.message);
@@ -63,7 +55,7 @@ module.exports = (config) => {
         },
         scan: (res, req) => {
             const pattern = `${req.params.key}${req.params['0']}`;
-            redis.scan(req.query.cursor || 0, "MATCH", pattern, "COUNT", req.query.count || 100, (err, result) => {
+            self.redis.scan(req.query.cursor || 0, "MATCH", pattern, "COUNT", req.query.count || 100, (err, result) => {
                 if (err) {
                     res.status(500);
                     return res.end(err.message);
@@ -75,7 +67,7 @@ module.exports = (config) => {
         },
         get: (res, req) => {
             const key = `${req.params.key}${req.params['0']}`;
-            redis.get(key, (err, result) => {
+            self.redis.get(key, (err, result) => {
                 if (err) {
                     res.status(500);
                     return res.end(err.message);
@@ -92,7 +84,7 @@ module.exports = (config) => {
             const key = `${req.params.key}${req.params['0']}`;
             try {
                 const value = JSON.stringify(req.body);
-                redis.set(key, value, function (err) {
+                self.redis.set(key, value, function (err) {
                     if (err) {
                         res.status(500);
                         return res.end(err.message);
@@ -107,14 +99,31 @@ module.exports = (config) => {
             }
         }
     };
+    self.env = nconf.defaults(config).argv().env();
+    const getEnv = (variable, _default) => self.env.get(variable) || _default;
 
-    const port = getEnv('HTTP_PORT', 7369);
+    const connect = (config) => {
+        self.env = nconf.defaults(config).argv().env();
+        const host = getEnv('REDIS_HOST', '127.0.0.1');
+        const redisPort = getEnv('REDIS_PORT', 6379);
+        const auth = getEnv('REDIS_AUTH', '');
+        const db = getEnv('REDIS_DB', 0);
+        self.redis = new Redis(`redis://:${auth}@${host}:${redisPort}/${db}`);
+    };
 
     return {
-        start: (cb) => app.listen(port, function (err) {
-            console.log(err || `HTTPEDIS started and listening on ${port}`);
+        reload: connect,
+        start: (cb) => {
+            connect(config);
+            const port = getEnv('HTTP_PORT', 7369);
+            self.server = self.app.listen(port, function (err) {
+                console.log(err || `HTTPEDIS started and listening on ${port}`);
+                return cb && cb();
+            })
+        },
+        stop: (cb) => self.server.close(function (err) {
+            console.log(err || `Stopping HTTPEDIS`);
             return cb && cb();
-        }),
-        stop: () => app.close()
+        })
     }
 };

@@ -18,7 +18,14 @@ const config = {
 const httpedis = require('httpedis')(config);
 
 // Starts the server
-httpedis.start();
+httpedis.start(optionalCallback);
+
+// Reloading redis connection 
+httpedis.reload({REDIS_DB: 1});
+
+// Stopping server 
+
+httpedis.stop(optionalCallback)
 ```
 # Enjoy
 ```shell 
