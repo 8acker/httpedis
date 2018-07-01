@@ -4,7 +4,7 @@ const mime = require('mime-types');
 const express = require('express');
 const bodyParser = require('body-parser');
 
-module.exports = (config) => {
+function HttPRedis(config) {
     config = config || {};
     const self = this;
     self.app = express();
@@ -138,4 +138,6 @@ module.exports = (config) => {
             return cb && cb();
         })
     }
-};
+}
+
+module.exports = HttPRedis;

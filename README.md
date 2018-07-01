@@ -19,7 +19,8 @@ const config = {
     HTTP_PORT: 9001
 };
 
-const httpedis = require('httpedis')(config);
+const Httpedis = require('httpedis');
+const httpedis = new Httpedis(config);
 
 // Starts the server
 httpedis.start(optionalCallback);

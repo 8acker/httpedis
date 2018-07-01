@@ -1,6 +1,6 @@
 {
   "name": "httpedis",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Http wrapper for ioredis",
   "main": "httpedis.js",
   "readmeFilename": "README.md",
