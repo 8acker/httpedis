@@ -33,9 +33,11 @@ httpedis.stop(optionalCallback)
 ```
 # Enjoy
 ```shell 
-# GET all keys 
-curl -X PUT -d foo=bar "localhost:9001/set/foo" 
+curl -X PUT -d '{"foo": "bar"}' "localhost:9001/set/foo" 
 curl "localhost:9001/get/foo" 
+{"foo": "bar"}
 curl "localhost:9001/keys/*" 
+["foo"]
+curl "localhost:9001/scan/*?cursor=0&count=100" 
 ["foo"]
 ```
