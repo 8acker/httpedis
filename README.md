@@ -31,7 +31,7 @@ httpedis.reload({REDIS_DB: 1});
 // Stopping server 
 httpedis.stop(optionalCallback)
 ```
-# Enjoy
+### Enjoy
 ```shell 
 curl -X PUT -d '{"foo": "bar"}' "localhost:9001/set/foo" 
 curl "localhost:9001/get/foo" 
